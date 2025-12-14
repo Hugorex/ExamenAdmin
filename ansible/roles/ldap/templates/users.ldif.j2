@@ -1,0 +1,73 @@
+dn: uid=usuario1,ou=people,dc={{ ldap_dc1 }},dc={{ ldap_dc2 }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: usuario1
+sn: Usuario
+givenName: Uno
+cn: Usuario Uno
+displayName: Usuario Uno
+uidNumber: 10001
+gidNumber: 10001
+userPassword: password123
+gecos: Usuario Uno
+loginShell: /bin/bash
+homeDirectory: /home/usuario1
+mail: usuario1@{{ ldap_domain }}
+
+dn: uid=usuario2,ou=people,dc={{ ldap_dc1 }},dc={{ ldap_dc2 }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: usuario2
+sn: Usuario
+givenName: Dos
+cn: Usuario Dos
+displayName: Usuario Dos
+uidNumber: 10002
+gidNumber: 10002
+userPassword: password123
+gecos: Usuario Dos
+loginShell: /bin/bash
+homeDirectory: /home/usuario2
+mail: usuario2@{{ ldap_domain }}
+
+dn: uid=usuario3,ou=people,dc={{ ldap_dc1 }},dc={{ ldap_dc2 }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: usuario3
+sn: Usuario
+givenName: Tres
+cn: Usuario Tres
+displayName: Usuario Tres
+uidNumber: 10003
+gidNumber: 10003
+userPassword: password123
+gecos: Usuario Tres
+loginShell: /bin/bash
+homeDirectory: /home/usuario3
+mail: usuario3@{{ ldap_domain }}
+
+dn: uid=wilo,ou=people,dc={{ ldap_dc1 }},dc={{ ldap_dc2 }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: wilo
+sn: Wilo
+givenName: Wilo
+cn: Wilo
+displayName: Wilo
+uidNumber: 10004
+gidNumber: 10004
+userPassword: password123
+gecos: Wilo
+loginShell: /bin/bash
+homeDirectory: /home/wilo
+mail: wilo@{{ ldap_domain }}
+
+dn: cn=admins,ou=groups,dc={{ ldap_dc1 }},dc={{ ldap_dc2 }}
+objectClass: posixGroup
+cn: admins
+gidNumber: 10001
+memberUid: usuario1

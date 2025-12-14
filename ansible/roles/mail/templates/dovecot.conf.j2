@@ -1,0 +1,7 @@
+protocols = imap pop3 lmtp
+listen = *, ::
+disable_plaintext_auth = no
+auth_mechanisms = plain login
+
+!include conf.d/*.conf
+!include_try /usr/share/dovecot/protocols.d/*.protocol

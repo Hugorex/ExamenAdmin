@@ -1,0 +1,5 @@
+---
+wordpress_db_name: wordpress_db
+wordpress_db_user: wp_user
+wordpress_db_password: wppass123
+wordpress_db_host: 192.168.56.11

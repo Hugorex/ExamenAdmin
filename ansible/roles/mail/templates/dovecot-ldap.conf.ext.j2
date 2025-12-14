@@ -1,0 +1,15 @@
+hosts = {{ ldap_server.replace('ldap://', '') }}
+ldap_version = 3
+auth_bind = yes
+dn = {{ ldap_bind_dn }}
+dnpass = {{ ldap_bind_password }}
+base = ou=people,{{ ldap_base }}
+scope = subtree
+
+pass_filter = (&(objectClass=inetOrgPerson)(mail=%u))
+pass_attrs = mail=user
+
+user_filter = (&(objectClass=inetOrgPerson)(mail=%u))
+user_attrs = =home={{ virtual_mailbox_base }}/%d/%n,=uid=vmail,=gid=vmail
+
+default_pass_scheme = PLAIN

@@ -1,0 +1,240 @@
+---
+# IMPORTANTE: Instalar python3-cryptography ANTES de generar certificados
+- name: Instalar python3-cryptography (requerido para certificados)
+  ansible.builtin.apt:
+    name:
+      - python3-cryptography
+    state: present
+
+- name: Crear grupo vmail ANTES que el usuario
+  ansible.builtin.group:
+    name: vmail
+    gid: 5000
+    state: present
+
+- name: Crear usuario vmail DESPUÉS del grupo
+  ansible.builtin.user:
+    name: vmail
+    uid: 5000
+    group: vmail
+    home: /var/vmail
+    shell: /usr/sbin/nologin
+    create_home: yes
+    state: present
+
+- name: Instalar Postfix, Dovecot y herramientas de correo
+  ansible.builtin.apt:
+    name:
+      - postfix
+      - postfix-ldap
+      - dovecot-core
+      - dovecot-imapd
+      - dovecot-pop3d
+      - dovecot-ldap
+      - dovecot-lmtpd
+      - amavisd-new
+      - spamassassin
+      - clamav
+      - clamav-daemon
+      - opendkim
+      - opendkim-tools
+      - libsasl2-modules
+      - sasl2-bin
+      - snmpd
+      - snmp
+    state: present
+
+- name: Configurar Postfix main.cf
+  ansible.builtin.template:
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart postfix
+
+- name: Configurar Postfix master.cf
+  ansible.builtin.template:
+    src: master.cf.j2
+    dest: /etc/postfix/master.cf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart postfix
+
+- name: Configurar consulta LDAP para usuarios
+  ansible.builtin.template:
+    src: ldap-users.cf.j2
+    dest: /etc/postfix/ldap-users.cf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart postfix
+
+- name: Configurar consulta LDAP para aliases
+  ansible.builtin.template:
+    src: ldap-aliases.cf.j2
+    dest: /etc/postfix/ldap-aliases.cf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart postfix
+
+- name: Crear directorio para certificados
+  ansible.builtin.file:
+    path: /etc/ssl/mail
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Generar clave privada para certificado
+  community.crypto.openssl_privatekey:
+    path: /etc/ssl/mail/mail.key
+    size: 2048
+
+- name: Generar CSR para certificado
+  community.crypto.openssl_csr:
+    path: /etc/ssl/mail/mail.csr
+    privatekey_path: /etc/ssl/mail/mail.key
+    common_name: "{{ mail_server_hostname }}"
+    country_name: ES
+    state_or_province_name: Madrid
+    locality_name: Madrid
+    organization_name: PatitoHosting
+    organizational_unit_name: IT
+
+- name: Generar certificado autofirmado
+  community.crypto.x509_certificate:
+    path: /etc/ssl/mail/mail.crt
+    privatekey_path: /etc/ssl/mail/mail.key
+    csr_path: /etc/ssl/mail/mail.csr
+    provider: selfsigned
+    selfsigned_not_after: "+365d"
+
+- name: Configurar Dovecot
+  ansible.builtin.template:
+    src: dovecot.conf.j2
+    dest: /etc/dovecot/dovecot.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart dovecot
+
+- name: Configurar Dovecot 10-auth.conf
+  ansible.builtin.template:
+    src: 10-auth.conf.j2
+    dest: /etc/dovecot/conf.d/10-auth.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart dovecot
+
+- name: Configurar Dovecot 10-mail.conf
+  ansible.builtin.template:
+    src: 10-mail.conf.j2
+    dest: /etc/dovecot/conf.d/10-mail.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart dovecot
+
+- name: Configurar Dovecot 10-master.conf
+  ansible.builtin.template:
+    src: 10-master.conf.j2
+    dest: /etc/dovecot/conf.d/10-master.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart dovecot
+
+- name: Configurar Dovecot 10-ssl.conf
+  ansible.builtin.template:
+    src: 10-ssl.conf.j2
+    dest: /etc/dovecot/conf.d/10-ssl.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart dovecot
+
+- name: Configurar Dovecot LDAP
+  ansible.builtin.template:
+    src: dovecot-ldap.conf.ext.j2
+    dest: /etc/dovecot/dovecot-ldap.conf.ext
+    owner: root
+    group: dovecot
+    mode: '0640'
+  notify: restart dovecot
+
+- name: Configurar Amavis
+  ansible.builtin.template:
+    src: amavis-conf.j2
+    dest: /etc/amavis/conf.d/50-user
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart amavis
+
+- name: Configurar SpamAssassin
+  ansible.builtin.template:
+    src: spamassassin-local.cf.j2
+    dest: /etc/spamassassin/local.cf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart spamassassin
+
+- name: Habilitar SpamAssassin
+  ansible.builtin.lineinfile:
+    path: /etc/default/spamassassin
+    regexp: '^ENABLED='
+    line: 'ENABLED=1'
+  notify: restart spamassassin
+
+- name: Actualizar base de datos de ClamAV
+  ansible.builtin.command: freshclam
+  changed_when: false
+  failed_when: false
+
+- name: Configurar SNMPD
+  ansible.builtin.template:
+    src: snmpd.conf.j2
+    dest: /etc/snmp/snmpd.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart snmpd
+
+- name: Asegurar que los servicios estén habilitados y en ejecución
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - postfix
+    - dovecot
+    - clamav-daemon
+    - clamav-freshclam
+  ignore_errors: yes
+
+- name: Asegurar que Amavis esté en ejecución
+  ansible.builtin.service:
+    name: amavis
+    state: started
+    enabled: yes
+  ignore_errors: yes
+
+- name: Asegurar que SpamAssassin esté en ejecución
+  ansible.builtin.service:
+    name: spamassassin
+    state: started
+    enabled: yes
+  ignore_errors: yes
+
+- name: Asegurar que SNMPD esté en ejecución
+  ansible.builtin.service:
+    name: snmpd
+    state: started
+    enabled: yes
+  failed_when: false
+  ignore_errors: yes

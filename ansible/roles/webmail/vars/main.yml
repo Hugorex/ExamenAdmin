@@ -1,0 +1,12 @@
+---
+roundcube_version: "1.6.9"
+roundcube_url: "https://github.com/roundcube/roundcubemail/releases/download/{{ roundcube_version }}/roundcubemail-{{ roundcube_version }}-complete.tar.gz"
+roundcube_install_dir: /var/www/webmail
+roundcube_temp_dir: /tmp/roundcube
+db_name: roundcube
+db_user: roundcube
+db_password: roundcube123
+db_host: 192.168.56.11
+smtp_host: 192.168.56.13
+imap_host: 192.168.56.13
+domain_name: patitohosting.licic

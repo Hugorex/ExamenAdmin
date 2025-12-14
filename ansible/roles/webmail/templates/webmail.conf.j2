@@ -1,0 +1,13 @@
+<VirtualHost *:80>
+    ServerName webmail.{{ domain_name }}
+    DocumentRoot {{ roundcube_install_dir }}
+
+    <Directory {{ roundcube_install_dir }}>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/webmail-error.log
+    CustomLog ${APACHE_LOG_DIR}/webmail-access.log combined
+</VirtualHost>

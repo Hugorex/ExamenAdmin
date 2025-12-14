@@ -1,0 +1,91 @@
+---
+- name: Instalar MariaDB y dependencias
+  ansible.builtin.apt:
+    name:
+      - mariadb-server
+      - mariadb-client
+      - python3-pymysql
+      - snmpd
+      - snmp
+    state: present
+
+- name: Asegurar que MariaDB esté en ejecución
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: yes
+
+- name: Configurar usuario root de MySQL
+  community.mysql.mysql_user:
+    name: root
+    password: "{{ mysql_root_password }}"
+    host_all: yes
+    check_implicit_admin: yes
+    login_unix_socket: /run/mysqld/mysqld.sock
+    state: present
+
+- name: Eliminar usuarios anónimos de MySQL
+  community.mysql.mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Eliminar base de datos de prueba
+  community.mysql.mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Crear base de datos WordPress
+  community.mysql.mysql_db:
+    name: "{{ wordpress_db_name }}"
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Crear usuario WordPress
+  community.mysql.mysql_user:
+    name: "{{ wordpress_db_user }}"
+    password: "{{ wordpress_db_password }}"
+    priv: "{{ wordpress_db_name }}.*:ALL"
+    host: '%'
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Configurar MariaDB para escuchar en todas las interfaces
+  ansible.builtin.template:
+    src: 50-server.cnf.j2
+    dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart mariadb
+
+- name: Configurar SNMPD
+  ansible.builtin.template:
+    src: snmpd.conf.j2
+    dest: /etc/snmp/snmpd.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart snmpd
+
+- name: Asegurar que SNMPD esté en ejecución
+  ansible.builtin.service:
+    name: snmpd
+    state: started
+    enabled: yes
+  failed_when: false
+  ignore_errors: yes

@@ -1,0 +1,62 @@
+---
+- name: Actualizar cache de APT
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Instalar paquetes básicos
+  ansible.builtin.apt:
+    name:
+      - vim
+      - curl
+      - wget
+      - git
+      - htop
+      - net-tools
+      - dnsutils
+      - ufw
+      - rsync
+      - sudo
+    state: present
+
+- name: Detener y deshabilitar systemd-resolved
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+- name: Eliminar /etc/resolv.conf si es un enlace simbólico
+  ansible.builtin.file:
+    path: /etc/resolv.conf
+    state: absent
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Crear /etc/resolv.conf con nameserver 8.8.8.8
+  ansible.builtin.copy:
+    content: |
+      nameserver 8.8.8.8
+      nameserver 8.8.4.4
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Configurar hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Configurar /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ ansible_default_ipv4.address }} {{ inventory_hostname }} {{ inventory_hostname_short }}"
+    state: present
+
+- name: Configurar zona horaria
+  community.general.timezone:
+    name: Europe/Madrid
+
+- name: Deshabilitar UFW (firewall deshabilitado para testing)
+  community.general.ufw:
+    state: disabled
+  ignore_errors: yes

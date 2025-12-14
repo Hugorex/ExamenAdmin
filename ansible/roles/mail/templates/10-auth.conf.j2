@@ -1,0 +1,14 @@
+disable_plaintext_auth = no
+auth_mechanisms = plain login
+
+passdb {
+  driver = ldap
+  args = /etc/dovecot/dovecot-ldap.conf.ext
+}
+
+userdb {
+  driver = ldap
+  args = /etc/dovecot/dovecot-ldap.conf.ext
+}
+
+!include auth-system.conf.ext

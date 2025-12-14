@@ -1,0 +1,18 @@
+use strict;
+
+$max_servers = 2;
+$daemon_user  = 'amavis';
+$daemon_group = 'amavis';
+$mydomain = '{{ mail_domain }}';
+$myhostname = '{{ mail_server_hostname }}';
+
+$forward_method = 'smtp:[127.0.0.1]:10025';
+$notify_method = $forward_method;
+
+@bypass_virus_checks_maps = (
+   \%bypass_virus_checks, \@bypass_virus_checks_acl, \$bypass_virus_checks_re);
+
+@bypass_spam_checks_maps = (
+   \%bypass_spam_checks, \@bypass_spam_checks_acl, \$bypass_spam_checks_re);
+
+1;

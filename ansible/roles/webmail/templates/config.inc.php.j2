@@ -1,0 +1,90 @@
+<?php
+
+/*
+ +-----------------------------------------------------------------------+
+ | Local configuration for the Roundcube Webmail installation.          |
+ +-----------------------------------------------------------------------+
+*/
+
+$config = [];
+
+// Database connection string
+$config['db_dsnw'] = 'mysql://{{ db_user }}:{{ db_password }}@{{ db_host }}/{{ db_name }}';
+
+// IMAP host
+$config['imap_host'] = 'tls://{{ imap_host }}:993';
+$config['imap_auth_type'] = null;
+$config['imap_delimiter'] = '/';
+
+// SMTP host - Sin autenticación, confiando en mynetworks
+$config['smtp_host'] = '{{ smtp_host }}';
+$config['smtp_port'] = 25;
+$config['smtp_user'] = '';
+$config['smtp_pass'] = '';
+$config['smtp_auth_type'] = null;
+
+// Display name
+$config['product_name'] = 'Webmail PatitoHosting';
+
+// Encryption key
+$config['des_key'] = '{{ lookup("password", "/dev/null chars=ascii_letters,digits length=24") }}';
+
+// Plugins
+$config['plugins'] = [];
+
+// Skin
+$config['skin'] = 'elastic';
+
+// Language
+$config['language'] = 'es_ES';
+
+// Support URL
+$config['support_url'] = '';
+
+// Domain for email addresses
+$config['mail_domain'] = '{{ domain_name }}';
+$config['username_domain'] = '{{ domain_name }}';
+
+// Session lifetime
+$config['session_lifetime'] = 10;
+
+// IP check
+$config['ip_check'] = false;
+
+// Identities
+$config['identities_level'] = 0;
+
+// Compose
+$config['compose_save_localstorage'] = true;
+
+// Addressbook
+$config['autocomplete_addressbooks'] = ['sql'];
+
+// Logging
+$config['log_driver'] = 'file';
+$config['log_dir'] = '{{ roundcube_install_dir }}/logs/';
+$config['temp_dir'] = '{{ roundcube_install_dir }}/temp/';
+
+// LDAP addressbook
+$config['ldap_public'] = [
+    'patitohosting' => [
+        'name'          => 'PatitoHosting LDAP',
+        'hosts'         => ['192.168.56.14'],
+        'port'          => 389,
+        'use_tls'       => false,
+        'ldap_version'  => 3,
+        'network_timeout' => 10,
+        'user_specific' => false,
+        'base_dn'       => 'ou=people,dc=patitohosting,dc=licic',
+        'bind_dn'       => 'cn=admin,dc=patitohosting,dc=licic',
+        'bind_pass'     => 'ldapadmin123',
+        'search_fields' => ['mail', 'cn', 'uid'],
+        'name_field'    => 'cn',
+        'email_field'   => 'mail',
+        'surname_field' => 'sn',
+        'firstname_field' => 'givenName',
+        'filter'        => '(objectClass=inetOrgPerson)',
+        'fuzzy_search'  => true,
+        'writable'      => false,
+    ],
+];

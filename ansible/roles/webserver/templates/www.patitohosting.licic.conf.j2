@@ -1,0 +1,28 @@
+<VirtualHost *:80>
+    ServerName www.patitohosting.licic
+    ServerAlias patitohosting.licic
+    
+    Redirect permanent / https://www.patitohosting.licic/
+    
+    ErrorLog ${APACHE_LOG_DIR}/wordpress_error.log
+    CustomLog ${APACHE_LOG_DIR}/wordpress_access.log combined
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName www.patitohosting.licic
+    ServerAlias patitohosting.licic
+    DocumentRoot /var/www/html/wordpress
+    
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/apache-selfsigned.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/apache-selfsigned.key
+    
+    <Directory /var/www/html/wordpress>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    ErrorLog ${APACHE_LOG_DIR}/wordpress_ssl_error.log
+    CustomLog ${APACHE_LOG_DIR}/wordpress_ssl_access.log combined
+</VirtualHost>

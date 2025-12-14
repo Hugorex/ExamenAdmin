@@ -1,0 +1,6 @@
+---
+ldap_domain: patitohosting.licic
+ldap_dc1: patitohosting
+ldap_dc2: licic
+ldap_organization: PatitoHosting
+ldap_admin_password: ldapadmin123

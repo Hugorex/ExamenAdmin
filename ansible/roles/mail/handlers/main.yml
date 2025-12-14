@@ -1,0 +1,25 @@
+---
+- name: restart postfix
+  ansible.builtin.service:
+    name: postfix
+    state: restarted
+
+- name: restart dovecot
+  ansible.builtin.service:
+    name: dovecot
+    state: restarted
+
+- name: restart amavis
+  ansible.builtin.service:
+    name: amavis
+    state: restarted
+
+- name: restart spamassassin
+  ansible.builtin.service:
+    name: spamassassin
+    state: restarted
+
+- name: restart snmpd
+  ansible.builtin.service:
+    name: snmpd
+    state: restarted

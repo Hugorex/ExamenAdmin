@@ -1,0 +1,10 @@
+server_host = {{ ldap_server.replace('ldap://', '') }}
+server_port = 389
+version = 3
+bind = yes
+bind_dn = {{ ldap_bind_dn }}
+bind_pw = {{ ldap_bind_password }}
+search_base = ou=people,{{ ldap_base }}
+scope = sub
+query_filter = (&(objectClass=inetOrgPerson)(uid=%u))
+result_attribute = mail

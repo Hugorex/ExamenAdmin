@@ -1,0 +1,9 @@
+zone "{{ domain_name }}" {
+    type master;
+    file "/etc/bind/db.{{ domain_name }}";
+};
+
+zone "56.168.192.in-addr.arpa" {
+    type master;
+    file "/etc/bind/db.56.168.192";
+};

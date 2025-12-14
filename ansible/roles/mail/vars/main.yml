@@ -1,0 +1,10 @@
+---
+mail_server_hostname: email.patitohosting.licic
+mail_domain: patitohosting.licic
+ldap_server: ldap://192.168.56.14
+ldap_base: dc=patitohosting,dc=licic
+ldap_bind_dn: cn=admin,dc=patitohosting,dc=licic
+ldap_bind_password: ldapadmin123
+virtual_mailbox_base: /var/vmail
+virtual_uid_maps: static:5000
+virtual_gid_maps: static:5000

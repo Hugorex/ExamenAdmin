@@ -1,0 +1,19 @@
+[dns]
+ns.patitohosting.licic ansible_host=192.168.56.12 ansible_ssh_private_key_file=/home/vagrant/.ssh/id_rsa
+
+[ldap]
+ldap.patitohosting.licic ansible_host=192.168.56.14 ansible_ssh_private_key_file=/home/vagrant/.ssh/id_rsa
+
+[database]
+db.patitohosting.licic ansible_host=192.168.56.11 ansible_ssh_private_key_file=/home/vagrant/.ssh/id_rsa
+
+[webserver]
+www.patitohosting.licic ansible_host=192.168.56.10 ansible_ssh_private_key_file=/home/vagrant/.ssh/id_rsa
+
+[mail]
+email.patitohosting.licic ansible_host=192.168.56.13 ansible_ssh_private_key_file=/home/vagrant/.ssh/id_rsa
+
+[all:vars]
+ansible_user=vagrant
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+ansible_python_interpreter=/usr/bin/python3

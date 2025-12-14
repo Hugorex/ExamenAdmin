@@ -1,0 +1,48 @@
+# Configuración general de Postfix
+myhostname = {{ mail_server_hostname }}
+mydomain = {{ mail_domain }}
+myorigin = $mydomain
+mydestination = $myhostname, localhost.$mydomain, localhost
+relayhost =
+mynetworks = 127.0.0.0/8, 192.168.56.0/24
+inet_interfaces = all
+inet_protocols = ipv4
+
+# Virtual mailboxes
+virtual_mailbox_domains = {{ mail_domain }}
+virtual_mailbox_base = {{ virtual_mailbox_base }}
+virtual_mailbox_maps = ldap:/etc/postfix/ldap-users.cf
+virtual_alias_maps = ldap:/etc/postfix/ldap-aliases.cf
+virtual_uid_maps = {{ virtual_uid_maps }}
+virtual_gid_maps = {{ virtual_gid_maps }}
+
+# TLS/SSL - Deshabilitado para compatibilidad con Roundcube
+smtpd_tls_cert_file = /etc/ssl/mail/mail.crt
+smtpd_tls_key_file = /etc/ssl/mail/mail.key
+smtpd_use_tls = no
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+smtpd_tls_security_level = none
+smtp_tls_security_level = none
+smtpd_tls_auth_only = no
+
+# SASL
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_security_options = noanonymous
+smtpd_sasl_local_domain = $myhostname
+broken_sasl_auth_clients = yes
+
+# Restricciones - Permitir relay desde mynetworks sin autenticación
+smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+smtpd_relay_restrictions = permit_mynetworks, reject_unauth_destination
+smtpd_helo_restrictions = permit_mynetworks, permit_sasl_authenticated
+smtpd_sender_restrictions = permit_mynetworks
+
+# Mailbox
+mailbox_size_limit = 0
+recipient_delimiter = +
+
+# Content filter (Amavis)
+content_filter = smtp-amavis:[127.0.0.1]:10024

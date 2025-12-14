@@ -1,0 +1,141 @@
+---
+- name: Instalar dependencias de Roundcube
+  apt:
+    name:
+      - php-net-smtp
+      - php-net-socket
+      - php-mail-mime
+      - php-mail-mimedecode
+      - php-net-ldap2
+      - php-net-ldap3
+      - php-imagick
+      - php-common
+      - php-gd
+      - php-imap
+      - php-json
+      - php-curl
+      - php-zip
+      - php-xml
+      - php-mbstring
+      - php-bz2
+      - php-intl
+      - php-gmp
+      - unzip
+      - wget
+    state: present
+    update_cache: yes
+
+- name: Crear directorio temporal para Roundcube
+  file:
+    path: "{{ roundcube_temp_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Descargar Roundcube
+  get_url:
+    url: "{{ roundcube_url }}"
+    dest: "{{ roundcube_temp_dir }}/roundcube.tar.gz"
+    mode: '0644'
+
+- name: Extraer Roundcube
+  unarchive:
+    src: "{{ roundcube_temp_dir }}/roundcube.tar.gz"
+    dest: "{{ roundcube_temp_dir }}"
+    remote_src: yes
+    creates: "{{ roundcube_temp_dir }}/roundcubemail-{{ roundcube_version }}"
+
+- name: Crear directorio de instalación
+  file:
+    path: "{{ roundcube_install_dir }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Copiar archivos de Roundcube
+  copy:
+    src: "{{ roundcube_temp_dir }}/roundcubemail-{{ roundcube_version }}/"
+    dest: "{{ roundcube_install_dir }}/"
+    remote_src: yes
+    owner: www-data
+    group: www-data
+    mode: preserve
+
+- name: Crear directorio de logs
+  file:
+    path: "{{ roundcube_install_dir }}/logs"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Crear directorio temp
+  file:
+    path: "{{ roundcube_install_dir }}/temp"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Configurar Roundcube
+  template:
+    src: config.inc.php.j2
+    dest: "{{ roundcube_install_dir }}/config/config.inc.php"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+- name: Crear base de datos Roundcube en servidor remoto
+  mysql_db:
+    name: "{{ db_name }}"
+    state: present
+    login_host: "{{ db_host }}"
+    login_user: root
+    login_password: root123
+  delegate_to: localhost
+
+- name: Crear usuario de base de datos Roundcube
+  mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: "{{ db_name }}.*:ALL"
+    host: "%"
+    state: present
+    login_host: "{{ db_host }}"
+    login_user: root
+    login_password: root123
+  delegate_to: localhost
+
+- name: Importar esquema de base de datos
+  mysql_db:
+    name: "{{ db_name }}"
+    state: import
+    target: "{{ roundcube_install_dir }}/SQL/mysql.initial.sql"
+    login_host: "{{ db_host }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+  delegate_to: localhost
+  ignore_errors: yes
+
+- name: Configurar VirtualHost para webmail
+  template:
+    src: webmail.conf.j2
+    dest: /etc/apache2/sites-available/webmail.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Habilitar sitio webmail
+  command: a2ensite webmail
+  args:
+    creates: /etc/apache2/sites-enabled/webmail.conf
+
+- name: Recargar Apache
+  service:
+    name: apache2
+    state: reloaded
+
+- name: Limpiar archivos temporales
+  file:
+    path: "{{ roundcube_temp_dir }}"
+    state: absent

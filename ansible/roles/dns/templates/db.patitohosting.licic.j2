@@ -1,0 +1,19 @@
+$TTL    86400
+@       IN      SOA     ns.{{ domain_name }}. admin.{{ domain_name }}. (
+                              2025121401         ; Serial
+                              3600              ; Refresh
+                              1800              ; Retry
+                              604800            ; Expire
+                              86400 )           ; Negative Cache TTL
+;
+@       IN      NS      ns.{{ domain_name }}.
+@       IN      A       192.168.56.10
+
+ns      IN      A       192.168.56.12
+www     IN      A       192.168.56.10
+webmail IN      A       192.168.56.10
+db      IN      A       192.168.56.11
+mail    IN      A       192.168.56.13
+ldap    IN      A       192.168.56.14
+
+@       IN      MX      10 mail.{{ domain_name }}.

@@ -1,0 +1,31 @@
+# .gitignore - Infraestructura PatitoHosting
+
+# Vagrant
+.vagrant/
+*.log
+
+# Ansible
+*.retry
+
+# Backups
+*.backup
+*.bak
+
+# SSH Keys
+*.pem
+*.key
+!ansible/roles/*/files/*.key
+
+# Temporal
+/tmp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

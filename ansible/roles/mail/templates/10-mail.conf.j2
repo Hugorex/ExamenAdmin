@@ -1,0 +1,13 @@
+mail_location = maildir:{{ virtual_mailbox_base }}/%d/%n/Maildir
+mail_privileged_group = mail
+mail_uid = vmail
+mail_gid = vmail
+
+namespace inbox {
+  inbox = yes
+}
+
+first_valid_uid = 5000
+last_valid_uid = 5000
+first_valid_gid = 5000
+last_valid_gid = 5000

@@ -1,0 +1,56 @@
+---
+- name: Instalar OpenLDAP
+  ansible.builtin.apt:
+    name:
+      - slapd
+      - ldap-utils
+    state: present
+
+- name: Configurar dominio LDAP
+  ansible.builtin.debconf:
+    name: slapd
+    question: "{{ item.question }}"
+    value: "{{ item.value }}"
+    vtype: "{{ item.vtype }}"
+  loop:
+    - { question: 'slapd/internal/adminpw', value: '{{ ldap_admin_password }}', vtype: 'password' }
+    - { question: 'slapd/internal/generated_adminpw', value: '{{ ldap_admin_password }}', vtype: 'password' }
+    - { question: 'slapd/password2', value: '{{ ldap_admin_password }}', vtype: 'password' }
+    - { question: 'slapd/password1', value: '{{ ldap_admin_password }}', vtype: 'password' }
+    - { question: 'slapd/domain', value: '{{ ldap_domain }}', vtype: 'string' }
+    - { question: 'shared/organization', value: '{{ ldap_organization }}', vtype: 'string' }
+  notify: restart slapd
+
+- name: Reconfigurar slapd
+  ansible.builtin.command: dpkg-reconfigure -f noninteractive slapd
+  changed_when: false
+
+- name: Copiar archivo base.ldif
+  ansible.builtin.template:
+    src: base.ldif.j2
+    dest: /tmp/base.ldif
+    mode: '0644'
+
+- name: Importar estructura base LDAP
+  ansible.builtin.shell: |
+    ldapadd -x -D "cn=admin,dc={{ ldap_dc1 }},dc={{ ldap_dc2 }}" -w {{ ldap_admin_password }} -f /tmp/base.ldif
+  ignore_errors: yes
+  changed_when: false
+
+- name: Copiar archivo users.ldif
+  ansible.builtin.template:
+    src: users.ldif.j2
+    dest: /tmp/users.ldif
+    mode: '0644'
+
+- name: Importar usuarios LDAP
+  ansible.builtin.shell: |
+    ldapadd -x -D "cn=admin,dc={{ ldap_dc1 }},dc={{ ldap_dc2 }}" -w {{ ldap_admin_password }} -f /tmp/users.ldif
+  ignore_errors: yes
+  changed_when: false
+
+- name: Asegurar que slapd esté habilitado y en ejecución
+  ansible.builtin.service:
+    name: slapd
+    state: started
+    enabled: yes
