@@ -22,6 +22,12 @@ service lmtp {
   unix_listener lmtp {
     mode = 0666
   }
+  
+  unix_listener /var/spool/postfix/private/dovecot-lmtp {
+    mode = 0600
+    user = postfix
+    group = postfix
+  }
 }
 
 service auth {
