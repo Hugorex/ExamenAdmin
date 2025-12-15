@@ -2,17 +2,10 @@
 - name: Instalar dependencias de Roundcube
   apt:
     name:
-      - php-net-smtp
-      - php-net-socket
-      - php-mail-mime
-      - php-mail-mimedecode
-      - php-net-ldap2
-      - php-net-ldap3
       - php-imagick
       - php-common
       - php-gd
       - php-imap
-      - php-json
       - php-curl
       - php-zip
       - php-xml
@@ -20,6 +13,8 @@
       - php-bz2
       - php-intl
       - php-gmp
+      - php-mysql
+      - php-ldap
       - unzip
       - wget
     state: present
