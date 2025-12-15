@@ -15,6 +15,7 @@
       - php-gmp
       - php-mysql
       - php-ldap
+      - python3-pymysql
       - unzip
       - wget
     state: present
