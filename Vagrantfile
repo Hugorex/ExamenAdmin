@@ -28,6 +28,12 @@ Vagrant.configure("2") do |config|
     ns.vm.provision "shell", inline: <<-SHELL
       sudo ssh-keygen -A
       sudo systemctl restart ssh
+      # Configurar llave SSH para comunicación entre VMs
+      if [ ! -f /home/vagrant/.ssh/id_rsa ]; then
+        sudo -u vagrant ssh-keygen -t rsa -N "" -f /home/vagrant/.ssh/id_rsa
+        sudo -u vagrant cat /home/vagrant/.ssh/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys
+        sudo -u vagrant chmod 600 /home/vagrant/.ssh/authorized_keys
+      fi
     SHELL
   end
   
@@ -47,6 +53,12 @@ Vagrant.configure("2") do |config|
     ldap.vm.provision "shell", inline: <<-SHELL
       sudo ssh-keygen -A
       sudo systemctl restart ssh
+      # Configurar llave SSH para comunicación entre VMs
+      if [ ! -f /home/vagrant/.ssh/id_rsa ]; then
+        sudo -u vagrant ssh-keygen -t rsa -N "" -f /home/vagrant/.ssh/id_rsa
+        sudo -u vagrant cat /home/vagrant/.ssh/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys
+        sudo -u vagrant chmod 600 /home/vagrant/.ssh/authorized_keys
+      fi
     SHELL
   end
   
@@ -66,6 +78,12 @@ Vagrant.configure("2") do |config|
     db.vm.provision "shell", inline: <<-SHELL
       sudo ssh-keygen -A
       sudo systemctl restart ssh
+      # Configurar llave SSH para comunicación entre VMs
+      if [ ! -f /home/vagrant/.ssh/id_rsa ]; then
+        sudo -u vagrant ssh-keygen -t rsa -N "" -f /home/vagrant/.ssh/id_rsa
+        sudo -u vagrant cat /home/vagrant/.ssh/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys
+        sudo -u vagrant chmod 600 /home/vagrant/.ssh/authorized_keys
+      fi
     SHELL
   end
   
@@ -85,6 +103,12 @@ Vagrant.configure("2") do |config|
     www.vm.provision "shell", inline: <<-SHELL
       sudo ssh-keygen -A
       sudo systemctl restart ssh
+      # Configurar llave SSH para comunicación entre VMs
+      if [ ! -f /home/vagrant/.ssh/id_rsa ]; then
+        sudo -u vagrant ssh-keygen -t rsa -N "" -f /home/vagrant/.ssh/id_rsa
+        sudo -u vagrant cat /home/vagrant/.ssh/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys
+        sudo -u vagrant chmod 600 /home/vagrant/.ssh/authorized_keys
+      fi
     SHELL
   end
   
@@ -104,6 +128,12 @@ Vagrant.configure("2") do |config|
     email.vm.provision "shell", inline: <<-SHELL
       sudo ssh-keygen -A
       sudo systemctl restart ssh
+      # Configurar llave SSH para comunicación entre VMs
+      if [ ! -f /home/vagrant/.ssh/id_rsa ]; then
+        sudo -u vagrant ssh-keygen -t rsa -N "" -f /home/vagrant/.ssh/id_rsa
+        sudo -u vagrant cat /home/vagrant/.ssh/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys
+        sudo -u vagrant chmod 600 /home/vagrant/.ssh/authorized_keys
+      fi
     SHELL
     
     # Provisión con Ansible Local (compatible con Windows, macOS y Linux)
