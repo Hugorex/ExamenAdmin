@@ -85,9 +85,10 @@
   mysql_db:
     name: "{{ db_name }}"
     state: present
-    login_host: "{{ db_host }}"
     login_user: root
     login_password: root123
+    login_unix_socket: /run/mysqld/mysqld.sock
+  delegate_to: db.patitohosting.licic
 
 - name: Crear usuario de base de datos Roundcube
   mysql_user:
@@ -96,9 +97,10 @@
     priv: "{{ db_name }}.*:ALL"
     host: "%"
     state: present
-    login_host: "{{ db_host }}"
     login_user: root
     login_password: root123
+    login_unix_socket: /run/mysqld/mysqld.sock
+  delegate_to: db.patitohosting.licic
 
 - name: Importar esquema de base de datos
   mysql_db:
