@@ -113,8 +113,8 @@ Vagrant.configure("2") do |config|
       ansible.playbook = "ansible/site.yml"
       ansible.inventory_path = "ansible/inventory/hosts"
       ansible.verbose = "v"
-      ansible.install_mode = "pip"
-      ansible.pip_install_cmd = "sudo apt-get update && sudo apt-get install -y python3-pip && sudo pip3 install --break-system-packages ansible"
+      ansible.install_mode = "default"
+      ansible.install = true
       ansible.extra_vars = {
         ansible_python_interpreter: "/usr/bin/python3"
       }
