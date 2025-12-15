@@ -90,17 +90,28 @@
     login_unix_socket: /run/mysqld/mysqld.sock
   delegate_to: db.patitohosting.licic
 
-- name: Crear usuario de base de datos Roundcube
+- name: Crear usuario de base de datos Roundcube con acceso solo desde www
   mysql_user:
     name: "{{ db_user }}"
     password: "{{ db_password }}"
     priv: "{{ db_name }}.*:ALL"
-    host: "%"
+    host: "192.168.56.10"
     state: present
     login_user: root
     login_password: rootpass123
     login_unix_socket: /run/mysqld/mysqld.sock
   delegate_to: db.patitohosting.licic
+
+- name: Eliminar usuario roundcube con acceso remoto inseguro
+  mysql_user:
+    name: "{{ db_user }}"
+    host: "%"
+    state: absent
+    login_user: root
+    login_password: rootpass123
+    login_unix_socket: /run/mysqld/mysqld.sock
+  delegate_to: db.patitohosting.licic
+  ignore_errors: yes
 
 - name: Importar esquema de base de datos
   mysql_db:

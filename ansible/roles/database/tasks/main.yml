@@ -52,11 +52,41 @@
     check_implicit_admin: yes
     login_unix_socket: /run/mysqld/mysqld.sock
 
-- name: Crear usuario WordPress
+- name: Crear usuario WordPress con acceso solo desde www
   community.mysql.mysql_user:
     name: "{{ wordpress_db_user }}"
     password: "{{ wordpress_db_password }}"
     priv: "{{ wordpress_db_name }}.*:ALL"
+    host: '192.168.56.10'
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Eliminar usuarios WordPress con acceso remoto inseguro
+  community.mysql.mysql_user:
+    name: "{{ item.user }}"
+    host: "{{ item.host }}"
+    state: absent
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+    login_unix_socket: /run/mysqld/mysqld.sock
+  loop:
+    - { user: "{{ wordpress_db_user }}", host: '%' }
+    - { user: "{{ wordpress_db_user }}", host: 'localhost' }
+    - { user: "{{ wordpress_db_user }}", host: 'www.patitohosting.licic' }
+    - { user: 'wpuser', host: '%' }
+    - { user: 'wordpress_user', host: '%' }
+    - { user: 'wordpress_user', host: '192.168.56.10' }
+  ignore_errors: yes
+
+- name: Crear usuario admin con acceso remoto total
+  community.mysql.mysql_user:
+    name: admin
+    password: adminpass123
+    priv: '*.*:ALL,GRANT'
     host: '%'
     state: present
     login_user: root
