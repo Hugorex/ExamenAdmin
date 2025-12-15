@@ -189,7 +189,9 @@
     path: /etc/default/spamassassin
     regexp: '^ENABLED='
     line: 'ENABLED=1'
+    create: yes
   notify: restart spamassassin
+  ignore_errors: yes
 
 - name: Actualizar base de datos de ClamAV
   ansible.builtin.command: freshclam
