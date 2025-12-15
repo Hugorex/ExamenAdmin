@@ -1,6 +1,19 @@
 <VirtualHost *:80>
     ServerName webmail.{{ domain_name }}
+    
+    Redirect permanent / https://webmail.{{ domain_name }}/
+    
+    ErrorLog ${APACHE_LOG_DIR}/webmail-error.log
+    CustomLog ${APACHE_LOG_DIR}/webmail-access.log combined
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName webmail.{{ domain_name }}
     DocumentRoot {{ roundcube_install_dir }}
+
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/apache-selfsigned.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/apache-selfsigned.key
 
     <Directory {{ roundcube_install_dir }}>
         Options -Indexes +FollowSymLinks
@@ -8,6 +21,6 @@
         Require all granted
     </Directory>
 
-    ErrorLog ${APACHE_LOG_DIR}/webmail-error.log
-    CustomLog ${APACHE_LOG_DIR}/webmail-access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/webmail-ssl-error.log
+    CustomLog ${APACHE_LOG_DIR}/webmail-ssl-access.log combined
 </VirtualHost>
