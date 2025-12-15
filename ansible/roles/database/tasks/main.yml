@@ -119,3 +119,17 @@
     enabled: yes
   failed_when: false
   ignore_errors: yes
+
+- name: Permitir MySQL desde servidor www en firewall
+  community.general.ufw:
+    rule: allow
+    port: '3306'
+    proto: tcp
+    from_ip: 192.168.56.10
+
+- name: Permitir MySQL desde red local para admin
+  community.general.ufw:
+    rule: allow
+    port: '3306'
+    proto: tcp
+    from_ip: 192.168.56.0/24

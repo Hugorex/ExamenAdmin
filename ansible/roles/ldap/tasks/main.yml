@@ -54,3 +54,17 @@
     name: slapd
     state: started
     enabled: yes
+
+- name: Permitir LDAP desde servidor www en firewall
+  community.general.ufw:
+    rule: allow
+    port: '389'
+    proto: tcp
+    from_ip: 192.168.56.10
+
+- name: Permitir LDAP desde servidor email en firewall
+  community.general.ufw:
+    rule: allow
+    port: '389'
+    proto: tcp
+    from_ip: 192.168.56.13

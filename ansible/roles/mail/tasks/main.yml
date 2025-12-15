@@ -240,3 +240,22 @@
     enabled: yes
   failed_when: false
   ignore_errors: yes
+
+- name: Permitir SMTP (puerto 25) en firewall
+  community.general.ufw:
+    rule: allow
+    port: '25'
+    proto: tcp
+
+- name: Permitir SMTP submission (puerto 587) en firewall
+  community.general.ufw:
+    rule: allow
+    port: '587'
+    proto: tcp
+
+- name: Permitir IMAPS (puerto 993) desde servidor www
+  community.general.ufw:
+    rule: allow
+    port: '993'
+    proto: tcp
+    from_ip: 192.168.56.10
