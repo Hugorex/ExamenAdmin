@@ -66,6 +66,23 @@ loginShell: /bin/bash
 homeDirectory: /home/wilo
 mail: wilo@{{ ldap_domain }}
 
+dn: uid=jc,ou=people,dc={{ ldap_dc1 }},dc={{ ldap_dc2 }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: jc
+sn: JC
+givenName: JC
+cn: JC
+displayName: JC
+uidNumber: 10005
+gidNumber: 10005
+userPassword: password123
+gecos: JC
+loginShell: /bin/bash
+homeDirectory: /home/jc
+mail: jc@{{ ldap_domain }}
+
 dn: cn=admins,ou=groups,dc={{ ldap_dc1 }},dc={{ ldap_dc2 }}
 objectClass: posixGroup
 cn: admins
