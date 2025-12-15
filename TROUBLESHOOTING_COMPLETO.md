@@ -283,57 +283,6 @@ curl http://webmail.patitohosting.licic
 
 ---
 
-## 🆘 SI NADA FUNCIONA
-
-### Opción A: Recrear desde GitHub
-```powershell
-# Borrar carpeta actual
-cd C:\
-Remove-Item -Recurse -Force C:\ExamenAdmin
-
-# Clonar de nuevo
-git clone https://github.com/Hugorex/ExamenAdmin.git
-cd ExamenAdmin
-vagrant up
-```
-
-### Opción B: Descargar ZIP fresco
-1. Ir a: https://github.com/Hugorex/ExamenAdmin
-2. Code → Download ZIP
-3. Extraer en `C:\ExamenAdmin`
-4. PowerShell:
-   ```powershell
-   cd C:\ExamenAdmin
-   vagrant up
-   ```
-
-### Opción C: Probar en otra máquina Windows
-Si todo falla, puede ser problema de hardware/Windows específico.
-
----
-
-## 📞 INFORMACIÓN PARA SOPORTE
-
-Si necesitas ayuda adicional, proporciona:
-
-```powershell
-# Versiones
-vagrant --version
-VBoxManage --version
-systeminfo | findstr /C:"OS"
-
-# Estado de VMs
-vagrant status
-
-# Logs de última VM
-vagrant ssh www -c "tail -50 /var/log/syslog"
-
-# Uso de recursos
-Get-Process | Where-Object {$_.Name -like "*VBox*"} | Select-Object Name, CPU, WorkingSet
-```
-
----
-
 ## ✅ RESUMEN DE COMANDOS ÚTILES
 
 ```powershell
