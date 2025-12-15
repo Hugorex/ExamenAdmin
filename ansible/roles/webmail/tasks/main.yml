@@ -86,7 +86,7 @@
     name: "{{ db_name }}"
     state: present
     login_user: root
-    login_password: root123
+    login_password: rootpass123
     login_unix_socket: /run/mysqld/mysqld.sock
   delegate_to: db.patitohosting.licic
 
@@ -98,7 +98,7 @@
     host: "%"
     state: present
     login_user: root
-    login_password: root123
+    login_password: rootpass123
     login_unix_socket: /run/mysqld/mysqld.sock
   delegate_to: db.patitohosting.licic
 
