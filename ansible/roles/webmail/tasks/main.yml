@@ -88,7 +88,6 @@
     login_host: "{{ db_host }}"
     login_user: root
     login_password: root123
-  delegate_to: localhost
 
 - name: Crear usuario de base de datos Roundcube
   mysql_user:
@@ -100,7 +99,6 @@
     login_host: "{{ db_host }}"
     login_user: root
     login_password: root123
-  delegate_to: localhost
 
 - name: Importar esquema de base de datos
   mysql_db:
@@ -110,7 +108,6 @@
     login_host: "{{ db_host }}"
     login_user: "{{ db_user }}"
     login_password: "{{ db_password }}"
-  delegate_to: localhost
   ignore_errors: yes
 
 - name: Configurar VirtualHost para webmail
