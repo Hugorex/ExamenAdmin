@@ -15,6 +15,10 @@
     SSLCertificateFile /etc/apache2/ssl/apache-selfsigned.crt
     SSLCertificateKeyFile /etc/apache2/ssl/apache-selfsigned.key
 
+    # Headers para permitir iframes en Roundcube
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Content-Security-Policy "frame-ancestors 'self'"
+
     <Directory {{ roundcube_install_dir }}>
         Options -Indexes +FollowSymLinks
         AllowOverride All
