@@ -228,7 +228,7 @@
 
 - name: Asegurar que SpamAssassin esté en ejecución
   ansible.builtin.service:
-    name: spamassassin
+    name: spamd
     state: started
     enabled: yes
   ignore_errors: yes
