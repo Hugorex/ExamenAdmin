@@ -33,7 +33,7 @@ function sync_user_to_ldap($user_id) {
     ldap_set_option($ldap_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
     
     // Autenticar como admin
-    if (!@ldap_bind($ldap_conn, $ldap_admin_dn, $ldap_admin_pass)) {
+    if (!ldap_bind($ldap_conn, $ldap_admin_dn, $ldap_admin_pass)) {
         error_log("WP-LDAP: Fallo autenticación admin LDAP");
         ldap_close($ldap_conn);
         return;
@@ -57,11 +57,9 @@ function sync_user_to_ldap($user_id) {
     // Preparar datos del usuario
     $username = $user->user_login;
     $email = $user->user_email;
-    $display_name = !empty($user->display_name) ? $user->display_name : $username;
+    $display_name = (!empty($user->display_name)) ? $user->display_name : $username;
     
-    // Generar hash SSHA de la contraseña (se usa la misma que en WordPress)
-    // Como no tenemos acceso a la contraseña en texto plano después del registro,
-    // usamos una contraseña temporal que el usuario debe cambiar
+    // Contraseña temporal
     $temp_password = 'password123';
     $password_hash = generate_ssha_password($temp_password);
     
@@ -118,49 +116,4 @@ function generate_ssha_password($password) {
     $hash = base64_encode(sha1($password . $salt, true) . $salt);
     
     return '{SSHA}' . $hash;
-}
-
-// Agregar aviso en el perfil del usuario
-add_action('show_user_profile', 'show_ldap_sync_notice');
-add_action('edit_user_profile', 'show_ldap_sync_notice');
-
-function show_ldap_sync_notice($user) {
-    $synced = get_user_meta($user->ID, 'ldap_synced', true);
-    $temp_password = get_user_meta($user->ID, 'ldap_temp_password', true);
-    
-    if ($synced === 'yes') {
-        ?>
-        <h3>Acceso a Webmail</h3>
-        <table class="form-table">
-            <tr>
-                <th>Estado LDAP</th>
-                <td>
-                    <span style="color: green;">✓ Sincronizado con LDAP</span>
-                    <p class="description">
-                        Puedes acceder a webmail con:<br>
-                        <strong>Usuario:</strong> <?php echo esc_html($user->user_email); ?><br>
-                        <strong>Contraseña:</strong> <?php echo esc_html($temp_password); ?><br>
-                        <em>URL: <a href="https://webmail.patitohosting.licic" target="_blank">https://webmail.patitohosting.licic</a></em>
-                    </p>
-                </td>
-            </tr>
-        </table>
-        <?php
-    }
-}
-
-// Agregar columna en listado de usuarios
-add_filter('manage_users_columns', 'add_ldap_column');
-function add_ldap_column($columns) {
-    $columns['ldap_sync'] = 'LDAP';
-    return $columns;
-}
-
-add_action('manage_users_custom_column', 'show_ldap_column_content', 10, 3);
-function show_ldap_column_content($value, $column_name, $user_id) {
-    if ($column_name == 'ldap_sync') {
-        $synced = get_user_meta($user_id, 'ldap_synced', true);
-        return $synced === 'yes' ? '✓' : '—';
-    }
-    return $value;
 }
