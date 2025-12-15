@@ -16,12 +16,30 @@ $config['imap_host'] = 'tls://{{ imap_host }}:993';
 $config['imap_auth_type'] = null;
 $config['imap_delimiter'] = '/';
 
+// IMAP connection options for self-signed certificates
+$config['imap_conn_options'] = [
+    'ssl' => [
+        'verify_peer'       => false,
+        'verify_peer_name'  => false,
+        'allow_self_signed' => true,
+    ],
+];
+
 // SMTP host - Sin autenticación, confiando en mynetworks
 $config['smtp_host'] = '{{ smtp_host }}';
 $config['smtp_port'] = 25;
 $config['smtp_user'] = '';
 $config['smtp_pass'] = '';
 $config['smtp_auth_type'] = null;
+
+// SMTP connection options for self-signed certificates
+$config['smtp_conn_options'] = [
+    'ssl' => [
+        'verify_peer'       => false,
+        'verify_peer_name'  => false,
+        'allow_self_signed' => true,
+    ],
+];
 
 // Display name
 $config['product_name'] = 'Webmail PatitoHosting';
