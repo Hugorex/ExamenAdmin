@@ -6,10 +6,31 @@
  * Author: Auto-generated
  */
 
+// Variable global para almacenar la contraseña temporalmente
+global $wp_ldap_user_password;
+$wp_ldap_user_password = null;
+
+// Capturar la contraseña antes de que WordPress la hashee
+add_action('user_register', 'capture_user_password', 1, 1);
+function capture_user_password($user_id) {
+    global $wp_ldap_user_password;
+    
+    // Intentar obtener la contraseña de varias fuentes
+    if (isset($_POST['pass1']) && !empty($_POST['pass1'])) {
+        $wp_ldap_user_password = $_POST['pass1'];
+    } elseif (isset($_POST['user_pass']) && !empty($_POST['user_pass'])) {
+        $wp_ldap_user_password = $_POST['user_pass'];
+    } elseif (isset($_POST['password']) && !empty($_POST['password'])) {
+        $wp_ldap_user_password = $_POST['password'];
+    }
+}
+
 // Hook cuando se crea un nuevo usuario en WordPress
 add_action('user_register', 'sync_user_to_ldap', 10, 1);
 
 function sync_user_to_ldap($user_id) {
+    global $wp_ldap_user_password;
+    
     $user = get_userdata($user_id);
     
     if (!$user) {
@@ -59,9 +80,12 @@ function sync_user_to_ldap($user_id) {
     $email = $user->user_email;
     $display_name = (!empty($user->display_name)) ? $user->display_name : $username;
     
-    // Contraseña temporal
-    $temp_password = 'password123';
-    $password_hash = generate_ssha_password($temp_password);
+    // Usar la contraseña capturada o una temporal
+    $password = (!empty($wp_ldap_user_password)) ? $wp_ldap_user_password : 'password123';
+    $password_hash = generate_ssha_password($password);
+    
+    // Limpiar la variable global
+    $wp_ldap_user_password = null;
     
     // Verificar si el usuario ya existe
     $user_dn = "uid=$username,$ldap_base_dn";
@@ -92,11 +116,11 @@ function sync_user_to_ldap($user_id) {
     
     // Agregar usuario a LDAP
     if (@ldap_add($ldap_conn, $user_dn, $entry)) {
-        error_log("WP-LDAP: Usuario $username sincronizado exitosamente con email $email");
+        error_log("WP-LDAP: Usuario $username sincronizado exitosamente con email $email (password: $password)");
         
         // Agregar nota al perfil del usuario
         update_user_meta($user_id, 'ldap_synced', 'yes');
-        update_user_meta($user_id, 'ldap_temp_password', $temp_password);
+        update_user_meta($user_id, 'ldap_password', $password);
         
     } else {
         error_log("WP-LDAP: Error al crear usuario $username en LDAP: " . ldap_error($ldap_conn));
