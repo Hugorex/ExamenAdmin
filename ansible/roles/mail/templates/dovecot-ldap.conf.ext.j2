@@ -5,9 +5,9 @@ dn = {{ ldap_bind_dn }}
 dnpass = {{ ldap_bind_password }}
 base = ou=people,{{ ldap_base }}
 scope = subtree
+auth_bind_userdn = uid=%n,ou=people,{{ ldap_base }}
 
 pass_filter = (&(objectClass=inetOrgPerson)(mail=%u))
-pass_attrs = mail=user
 
 user_filter = (&(objectClass=inetOrgPerson)(mail=%u))
 user_attrs = =home={{ virtual_mailbox_base }}/%d/%n,=uid=vmail,=gid=vmail
