@@ -13,6 +13,7 @@
       - php-soap
       - php-intl
       - php-zip
+      - php-ldap
       - libapache2-mod-php
       - libapache2-mod-authnz-external
       - libapache2-mod-authz-unixgroup
@@ -123,6 +124,22 @@
   args:
     creates: /etc/apache2/sites-enabled/www.patitohosting.licic.conf
   notify: restart apache2
+
+- name: Crear directorio mu-plugins si no existe
+  ansible.builtin.file:
+    path: /var/www/html/wordpress/wp-content/mu-plugins
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Copiar plugin de sincronización LDAP
+  ansible.builtin.copy:
+    src: wp-ldap-sync.php
+    dest: /var/www/html/wordpress/wp-content/mu-plugins/wp-ldap-sync.php
+    owner: www-data
+    group: www-data
+    mode: '0644'
 
 - name: Asegurar que Apache esté habilitado y en ejecución
   ansible.builtin.service:
