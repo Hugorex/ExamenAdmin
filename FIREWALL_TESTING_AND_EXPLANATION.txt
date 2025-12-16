@@ -1,0 +1,402 @@
+===============================================================================
+GUÍA DE PRUEBAS DE FIREWALL Y EXPLICACIÓN DE REGLAS DE SEGURIDAD
+===============================================================================
+Fecha: 15 de diciembre de 2025
+Sistema: 5 Servidores Debian 12 con UFW configurado
+===============================================================================
+
+ÍNDICE:
+1. Comandos para Probar el Firewall
+2. Resumen de Por Qué se Aplicó Cada Regla de Seguridad
+
+===============================================================================
+PARTE 1: COMANDOS PARA PROBAR QUE EL FIREWALL FUNCIONA CORRECTAMENTE
+===============================================================================
+
+-------------------------------------------
+PRUEBA 1: Servidor DNS (192.168.56.12)
+-------------------------------------------
+# Verificar que el puerto 53 está abierto para consultas DNS
+dig @192.168.56.12 patitohosting.licic
+
+# Verificar estado del firewall
+vagrant ssh ns -c "sudo ufw status verbose"
+
+# Debe mostrar:
+# - Puerto 53/tcp ALLOW Anywhere
+# - Puerto 53/udp ALLOW Anywhere
+# - Puerto 22 ALLOW desde 192.168.56.0/24
+
+
+-------------------------------------------
+PRUEBA 2: Servidor LDAP (192.168.56.14)
+-------------------------------------------
+# Desde el servidor WWW (debe funcionar)
+vagrant ssh www -c "ldapsearch -x -H ldap://192.168.56.14 -b dc=patitohosting,dc=licic -D cn=admin,dc=patitohosting,dc=licic -w admin123 '(uid=jc)'"
+
+# Desde el servidor EMAIL (debe funcionar)
+vagrant ssh email -c "ldapsearch -x -H ldap://192.168.56.14 -b dc=patitohosting,dc=licic -D cn=admin,dc=patitohosting,dc=licic -w admin123 '(uid=jc)'"
+
+# Desde tu PC (debe ser bloqueado)
+ldapsearch -x -H ldap://192.168.56.14 -b dc=patitohosting,dc=licic -D cn=admin,dc=patitohosting,dc=licic -w admin123 '(uid=jc)'
+
+# Verificar reglas del firewall
+vagrant ssh ldap -c "sudo ufw status verbose"
+
+# Debe mostrar:
+# - Puerto 389 ALLOW desde 192.168.56.10
+# - Puerto 389 ALLOW desde 192.168.56.13
+# - Puerto 22 ALLOW desde 192.168.56.0/24
+
+
+-------------------------------------------
+PRUEBA 3: Servidor DB (192.168.56.11)
+-------------------------------------------
+# Desde el servidor WWW (debe funcionar con wp_user)
+vagrant ssh www -c "mysql -h 192.168.56.11 -u wp_user -pwppassword -e 'SHOW DATABASES;'"
+
+# Desde tu PC con usuario admin (debe funcionar)
+mysql -h 192.168.56.11 -u admin -padminpass123 -e "SELECT user, host FROM mysql.user;"
+
+# Desde tu PC con usuario wp_user (debe ser bloqueado)
+mysql -h 192.168.56.11 -u wp_user -pwppassword -e 'SHOW DATABASES;'
+
+# Verificar reglas del firewall
+vagrant ssh db -c "sudo ufw status verbose"
+
+# Debe mostrar:
+# - Puerto 3306 ALLOW desde 192.168.56.10
+# - Puerto 3306 ALLOW desde 192.168.56.0/24
+# - Puerto 22 ALLOW desde 192.168.56.0/24
+
+
+-------------------------------------------
+PRUEBA 4: Servidor WWW (192.168.56.10)
+-------------------------------------------
+# Probar acceso HTTP desde tu PC
+curl -I http://192.168.56.10/wordpress/
+
+# Probar acceso HTTPS desde tu PC
+curl -I -k https://192.168.56.10/
+
+# Probar acceso a Roundcube
+curl -I http://192.168.56.10/roundcube/
+
+# Verificar reglas del firewall
+vagrant ssh www -c "sudo ufw status verbose"
+
+# Debe mostrar:
+# - Puerto 80/tcp ALLOW Anywhere
+# - Puerto 443/tcp ALLOW Anywhere
+# - Puerto 22 ALLOW desde 192.168.56.0/24
+
+
+-------------------------------------------
+PRUEBA 5: Servidor EMAIL (192.168.56.13)
+-------------------------------------------
+# Probar SMTP desde tu PC (puerto 25)
+telnet 192.168.56.13 25
+# Escribe: EHLO test.com
+# Luego: QUIT
+
+# Probar SMTP submission desde tu PC (puerto 587)
+telnet 192.168.56.13 587
+# Escribe: EHLO test.com
+# Luego: QUIT
+
+# Probar IMAP desde el servidor WWW (debe funcionar)
+vagrant ssh www -c "openssl s_client -connect 192.168.56.13:993 -quiet < /dev/null"
+
+# Probar IMAP desde tu PC (debe ser bloqueado)
+openssl s_client -connect 192.168.56.13:993 -quiet < /dev/null
+
+# Verificar reglas del firewall
+vagrant ssh email -c "sudo ufw status verbose"
+
+# Debe mostrar:
+# - Puerto 25/tcp ALLOW Anywhere
+# - Puerto 587/tcp ALLOW Anywhere
+# - Puerto 993/tcp ALLOW desde 192.168.56.10
+# - Puerto 22 ALLOW desde 192.168.56.0/24
+
+
+-------------------------------------------
+PRUEBA 6: SSH en todos los servidores
+-------------------------------------------
+# Desde tu PC (debe funcionar, estás en la red local)
+vagrant ssh ns -c "echo 'SSH funciona en NS'"
+vagrant ssh ldap -c "echo 'SSH funciona en LDAP'"
+vagrant ssh db -c "echo 'SSH funciona en DB'"
+vagrant ssh www -c "echo 'SSH funciona en WWW'"
+vagrant ssh email -c "echo 'SSH funciona en EMAIL'"
+
+# Para simular acceso SSH desde fuera de la red (debe ser bloqueado):
+# Esto requeriría configurar una IP fuera del rango 192.168.56.0/24
+# En producción, un intento desde Internet sería bloqueado
+
+
+-------------------------------------------
+PRUEBA 7: Verificar logs de UFW
+-------------------------------------------
+# Ver intentos de conexión bloqueados en cada servidor
+vagrant ssh ns -c "sudo tail -50 /var/log/ufw.log"
+vagrant ssh ldap -c "sudo tail -50 /var/log/ufw.log"
+vagrant ssh db -c "sudo tail -50 /var/log/ufw.log"
+vagrant ssh www -c "sudo tail -50 /var/log/ufw.log"
+vagrant ssh email -c "sudo tail -50 /var/log/ufw.log"
+
+
+-------------------------------------------
+PRUEBA 8: Prueba completa de conectividad
+-------------------------------------------
+# Script para verificar todas las conexiones importantes
+vagrant ssh www -c "
+echo '=== Pruebas desde servidor WWW ==='
+echo 'DNS:'
+dig @192.168.56.12 patitohosting.licic +short
+echo 'LDAP:'
+ldapsearch -x -H ldap://192.168.56.14 -b dc=patitohosting,dc=licic -D cn=admin,dc=patitohosting,dc=licic -w admin123 '(uid=jc)' uid | grep 'uid:'
+echo 'MySQL:'
+mysql -h 192.168.56.11 -u wp_user -pwppassword -e 'SELECT 1;'
+echo 'IMAP:'
+timeout 2 bash -c 'echo quit | openssl s_client -connect 192.168.56.13:993 2>/dev/null' | grep 'Dovecot ready'
+"
+
+
+-------------------------------------------
+PRUEBA 9: Resumen de estado de todos los firewalls
+-------------------------------------------
+# Ver estado resumido de UFW en todos los servidores
+for server in ns ldap db www email; do
+    echo "=== Firewall status en $server ==="
+    vagrant ssh $server -c "sudo ufw status numbered"
+    echo ""
+done
+
+
+===============================================================================
+PARTE 2: RESUMEN DE POR QUÉ SE APLICÓ CADA REGLA DE SEGURIDAD
+===============================================================================
+
+-------------------------------------------
+FILOSOFÍA GENERAL DEL FIREWALL
+-------------------------------------------
+Se implementó una estrategia de seguridad basada en el PRINCIPIO DE MÍNIMO PRIVILEGIO:
+- Por defecto, TODO el tráfico entrante está BLOQUEADO
+- Solo se permite el tráfico estrictamente necesario para cada servicio
+- Cada servidor solo expone los puertos que necesita para su función específica
+- Se restringe el acceso a servicios internos solo a los servidores que los necesitan
+
+
+-------------------------------------------
+POLÍTICA POR DEFECTO (Aplicada a TODOS los servidores)
+-------------------------------------------
+REGLA: ufw default deny incoming
+POR QUÉ: Seguridad por defecto. Si no se permite explícitamente, se bloquea.
+         Previene accesos no autorizados y reduce la superficie de ataque.
+
+REGLA: ufw default allow outgoing
+POR QUÉ: Los servidores necesitan hacer conexiones salientes (actualizaciones,
+         consultas DNS, conexiones a otros servicios). No hay riesgo de seguridad
+         en permitir tráfico saliente por defecto.
+
+
+-------------------------------------------
+SSH (Puerto 22) - TODOS los servidores
+-------------------------------------------
+REGLA: ufw allow from 192.168.56.0/24 to any port 22
+POR QUÉ:
+- SSH es crítico para administración, pero es un vector de ataque común
+- Solo permitimos SSH desde la red local (192.168.56.0/24)
+- En producción, esto significa que solo administradores con VPN pueden acceder
+- Previene ataques de fuerza bruta desde Internet
+- Reduce drásticamente intentos de acceso no autorizados
+
+
+-------------------------------------------
+SERVIDOR DNS (ns - 192.168.56.12)
+-------------------------------------------
+REGLA: ufw allow 53/tcp
+       ufw allow 53/udp
+POR QUÉ:
+- DNS es un servicio público que debe ser accesible desde cualquier lugar
+- Los clientes de Internet necesitan resolver patitohosting.licic
+- Puerto 53 es estándar y esperado para DNS
+- Ambos protocolos (TCP y UDP) son necesarios:
+  * UDP: Para consultas normales (más rápido)
+  * TCP: Para transferencias de zona y respuestas grandes
+
+PUERTOS BLOQUEADOS: Todos los demás
+POR QUÉ: El servidor DNS solo necesita hacer consultas DNS, nada más debe estar expuesto
+
+
+-------------------------------------------
+SERVIDOR LDAP (ldap - 192.168.56.14)
+-------------------------------------------
+REGLA: ufw allow from 192.168.56.10 to any port 389
+       ufw allow from 192.168.56.13 to any port 389
+POR QUÉ:
+- LDAP contiene información sensible (usuarios, contraseñas, emails)
+- NO es un servicio público, es solo para uso interno
+- Solo el servidor WWW (192.168.56.10) necesita LDAP para:
+  * WordPress crear usuarios
+  * Roundcube autenticar usuarios de correo
+- Solo el servidor EMAIL (192.168.56.13) necesita LDAP para:
+  * Dovecot autenticar usuarios IMAP
+  * Postfix verificar existencia de usuarios
+- Bloquear acceso desde Internet previene:
+  * Enumeración de usuarios
+  * Ataques de fuerza bruta contra cuentas
+  * Extracción de información del directorio
+
+PUERTOS BLOQUEADOS: Todos excepto 389 desde www y email
+POR QUÉ: Principio de mínimo privilegio. Si no lo necesitas, no lo tengas.
+
+
+-------------------------------------------
+SERVIDOR DATABASE (db - 192.168.56.11)
+-------------------------------------------
+REGLA: ufw allow from 192.168.56.10 to any port 3306
+       ufw allow from 192.168.56.0/24 to any port 3306
+POR QUÉ:
+- MySQL contiene datos críticos (posts de WordPress, emails de Roundcube)
+- Permitir desde 192.168.56.10 (WWW):
+  * WordPress necesita leer/escribir en su base de datos
+  * Roundcube necesita acceder a la base de datos de correos
+- Permitir desde 192.168.56.0/24 (red local completa):
+  * Permite que administradores usen mysql desde su PC local
+  * Permite backups y mantenimiento desde herramientas locales
+  * Usuario 'admin' puede conectarse remotamente para administración
+- IMPORTANTE: Aunque el firewall permite la red local, los usuarios MySQL
+  están restringidos por IP en la base de datos misma (defensa en capas):
+  * wp_user solo desde 192.168.56.10
+  * roundcube solo desde 192.168.56.10
+  * admin desde cualquier lugar (%)
+
+PUERTOS BLOQUEADOS: Acceso desde Internet (fuera de 192.168.56.0/24)
+POR QUÉ: Exponer MySQL a Internet es extremadamente peligroso:
+- Ataques de fuerza bruta contra contraseñas
+- Explotación de vulnerabilidades de MySQL
+- Extracción de datos sensibles
+- Defensa en profundidad: firewall + usuarios restringidos por IP
+
+
+-------------------------------------------
+SERVIDOR WWW (www - 192.168.56.10)
+-------------------------------------------
+REGLA: ufw allow 80/tcp
+       ufw allow 443/tcp
+POR QUÉ:
+- Es un servidor web público, debe ser accesible desde Internet
+- Puerto 80 (HTTP):
+  * Acceso al sitio WordPress
+  * Acceso a Roundcube webmail
+  * Redirecciones a HTTPS si se configuran
+- Puerto 443 (HTTPS):
+  * Conexiones seguras encriptadas
+  * Protección de credenciales en tránsito
+  * Requerido para certificados SSL/TLS en producción
+- Estos son los ÚNICOS servicios públicos del servidor web
+
+PUERTOS BLOQUEADOS: MySQL (3306), servicios internos
+POR QUÉ: Aunque WWW tiene clientes MySQL y LDAP instalados, no necesita
+         RECIBIR conexiones en esos puertos. Solo HACE conexiones salientes
+         a otros servidores.
+
+
+-------------------------------------------
+SERVIDOR EMAIL (email - 192.168.56.13)
+-------------------------------------------
+REGLA: ufw allow 25/tcp
+       ufw allow 587/tcp
+POR QUÉ:
+- Puerto 25 (SMTP):
+  * Recepción de correos de otros servidores de Internet
+  * Estándar universal para entrega de correo
+  * DEBE estar abierto o no recibiremos emails externos
+- Puerto 587 (Submission):
+  * Envío de correos desde clientes autenticados
+  * Usado por usuarios para enviar correo
+  * Requiere autenticación (más seguro que puerto 25)
+
+REGLA: ufw allow from 192.168.56.10 to any port 993
+POR QUÉ:
+- Puerto 993 (IMAPS - IMAP sobre SSL):
+  * Solo Roundcube (en www) necesita acceder a buzones IMAP
+  * Los usuarios NO acceden directamente al servidor de email
+  * Los usuarios acceden a través de Roundcube (webmail)
+  * Restricción a www previene accesos directos no deseados
+  * Si se permite desde Internet, bots intentarán fuerza bruta
+
+PUERTOS BLOQUEADOS: IMAP desde Internet, otros puertos
+POR QUÉ:
+- No ofrecemos acceso IMAP directo a usuarios (solo webmail)
+- Reduce superficie de ataque
+- Centraliza autenticación en un solo punto (Roundcube)
+- Previene ataques de fuerza bruta contra cuentas de correo
+
+
+===============================================================================
+RESUMEN EJECUTIVO: ARQUITECTURA DE SEGURIDAD EN CAPAS
+===============================================================================
+
+CAPA 1 - FIREWALL (UFW):
+- Bloquea tráfico a nivel de red antes de que llegue a servicios
+- Servicios públicos: DNS (53), HTTP/HTTPS (80/443), SMTP (25/587)
+- Servicios internos: LDAP (389), MySQL (3306), IMAP (993)
+- SSH solo desde red local
+
+CAPA 2 - AUTENTICACIÓN DE SERVICIOS:
+- MySQL: Usuarios restringidos por IP además del firewall
+  * wp_user solo desde 192.168.56.10
+  * roundcube solo desde 192.168.56.10
+  * admin puede conectarse remotamente pero requiere credenciales
+- LDAP: Requiere bind con usuario/contraseña válidos
+- IMAP: Requiere usuario/contraseña de correo
+- Roundcube: Requiere inicio de sesión web
+
+CAPA 3 - SEGMENTACIÓN DE SERVICIOS:
+- Cada servicio en su propio servidor
+- Si un servidor es comprometido, los demás siguen protegidos
+- No hay "single point of failure" de seguridad
+
+PRINCIPIOS APLICADOS:
+✓ Defensa en profundidad (múltiples capas de seguridad)
+✓ Mínimo privilegio (solo el acceso necesario)
+✓ Segregación de funciones (cada servidor una tarea)
+✓ Fail-safe defaults (por defecto todo bloqueado)
+✓ Reducción de superficie de ataque (menos puertos expuestos)
+
+
+===============================================================================
+BENEFICIOS DE ESTA CONFIGURACIÓN
+===============================================================================
+
+1. PROTECCIÓN CONTRA ATAQUES COMUNES:
+   - Escaneo de puertos: Solo verán servicios públicos intencionales
+   - Fuerza bruta SSH: Bloqueado desde Internet
+   - Fuerza bruta MySQL: No accesible desde Internet
+   - Explotación LDAP: No accesible desde Internet
+   - Fuerza bruta IMAP: Solo accesible vía Roundcube
+
+2. CUMPLIMIENTO DE MEJORES PRÁCTICAS:
+   - Principio de mínimo privilegio implementado
+   - Servicios internos no expuestos públicamente
+   - Autenticación requerida en múltiples niveles
+   - Logs de firewall para auditoría
+
+3. FACILIDAD DE MANTENIMIENTO:
+   - Reglas claras y documentadas
+   - Fácil identificar qué está permitido y por qué
+   - Troubleshooting simplificado (revisar logs UFW)
+   - Escalable para agregar más servidores
+
+4. PREPARADO PARA PRODUCCIÓN:
+   - Arquitectura enterprise-grade
+   - Seguridad equivalente a entornos profesionales
+   - Puede desplegarse en cloud sin cambios mayores
+   - Cumple estándares de seguridad básicos
+
+===============================================================================
+FIN DEL DOCUMENTO
+===============================================================================

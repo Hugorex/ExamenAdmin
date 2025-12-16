@@ -7,9 +7,9 @@ base = ou=people,{{ ldap_base }}
 scope = subtree
 auth_bind_userdn = uid=%n,ou=people,{{ ldap_base }}
 
-pass_filter = (&(objectClass=inetOrgPerson)(mail=%u))
+pass_filter = (&(objectClass=inetOrgPerson)(uid=%n))
 
-user_filter = (&(objectClass=inetOrgPerson)(mail=%u))
-user_attrs = =home={{ virtual_mailbox_base }}/%d/%n,=uid=vmail,=gid=vmail
+user_filter = (&(objectClass=inetOrgPerson)(uid=%n))
+user_attrs = mail=user,=home={{ virtual_mailbox_base }}/%d/%n,=uid=vmail,=gid=vmail
 
 default_pass_scheme = PLAIN

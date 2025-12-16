@@ -52,11 +52,11 @@
     check_implicit_admin: yes
     login_unix_socket: /run/mysqld/mysqld.sock
 
-- name: Crear usuario WordPress con acceso solo desde www
+- name: Crear usuario WordPress con permisos limitados (sin DELETE en wp_users)
   community.mysql.mysql_user:
     name: "{{ wordpress_db_user }}"
     password: "{{ wordpress_db_password }}"
-    priv: "{{ wordpress_db_name }}.*:ALL"
+    priv: "{{ wordpress_db_name }}.*:SELECT,INSERT,UPDATE,CREATE,INDEX,ALTER/{{ wordpress_db_name }}.wp_posts:DELETE/{{ wordpress_db_name }}.wp_comments:DELETE/{{ wordpress_db_name }}.wp_postmeta:DELETE/{{ wordpress_db_name }}.wp_commentmeta:DELETE/{{ wordpress_db_name }}.wp_options:DELETE/{{ wordpress_db_name }}.wp_links:DELETE/{{ wordpress_db_name }}.wp_term_relationships:DELETE/{{ wordpress_db_name }}.wp_term_taxonomy:DELETE/{{ wordpress_db_name }}.wp_terms:DELETE/{{ wordpress_db_name }}.wp_usermeta:DELETE"
     host: '192.168.56.10'
     state: present
     login_user: root
@@ -82,17 +82,19 @@
     - { user: 'wordpress_user', host: '192.168.56.10' }
   ignore_errors: yes
 
-- name: Crear usuario admin con acceso remoto total
-  community.mysql.mysql_user:
-    name: admin
-    password: adminpass123
-    priv: '*.*:ALL,GRANT'
-    host: '%'
-    state: present
-    login_user: root
-    login_password: "{{ mysql_root_password }}"
-    check_implicit_admin: yes
-    login_unix_socket: /run/mysqld/mysqld.sock
+# Usuario admin remoto eliminado por seguridad
+# Para administrar la BD, usar: vagrant ssh db -c "mysql -u root -p"
+# - name: Crear usuario admin con acceso desde red local
+#   community.mysql.mysql_user:
+#     name: admin
+#     password: adminpass123
+#     priv: '*.*:ALL,GRANT'
+#     host: '192.168.56.%'
+#     state: present
+#     login_user: root
+#     login_password: "{{ mysql_root_password }}"
+#     check_implicit_admin: yes
+#     login_unix_socket: /run/mysqld/mysqld.sock
 
 - name: Configurar MariaDB para escuchar en todas las interfaces
   ansible.builtin.template:

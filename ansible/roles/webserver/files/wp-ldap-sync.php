@@ -115,6 +115,10 @@ function sync_user_to_ldap($user_id) {
     );
     
     // Agregar usuario a LDAP
+    error_log("WP-LDAP: Intentando crear usuario $username en $user_dn");
+    error_log("WP-LDAP: Password capturada: " . ($password ? "SI (longitud: " . strlen($password) . ")" : "NO"));
+    error_log("WP-LDAP: Password hash: $password_hash");
+    
     if (@ldap_add($ldap_conn, $user_dn, $entry)) {
         error_log("WP-LDAP: Usuario $username sincronizado exitosamente con email $email (password: $password)");
         
@@ -123,7 +127,9 @@ function sync_user_to_ldap($user_id) {
         update_user_meta($user_id, 'ldap_password', $password);
         
     } else {
-        error_log("WP-LDAP: Error al crear usuario $username en LDAP: " . ldap_error($ldap_conn));
+        $error = ldap_error($ldap_conn);
+        $errno = ldap_errno($ldap_conn);
+        error_log("WP-LDAP: Error al crear usuario $username en LDAP - Error #$errno: $error");
     }
     
     ldap_close($ldap_conn);
